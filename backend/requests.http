@@ -1,0 +1,165 @@
+
+### Variables Globales
+@baseUrl = http://127.0.0.1:8000
+
+###############################################################################
+# 1. AUTENTICACIÓN Y PERFIL
+###############################################################################
+
+### 1.1 Registrar un nuevo usuario (rol user)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "cliente1",
+  "full_name": "Cliente de Prueba",
+  "email": "cliente1@example.com",
+  "password": "Password123!"
+}
+
+### 1.2 Login con Administrador (Establece cookie HttpOnly access_token)
+POST {{baseUrl}}/auth/token
+Content-Type: application/x-www-form-urlencoded
+
+username=admin&password=Admin1234!
+
+### 1.3 Consultar perfil actual (/me)
+GET {{baseUrl}}/auth/me
+
+### 1.4 Logout (Limpia cookie HttpOnly)
+POST {{baseUrl}}/auth/logout
+
+
+###############################################################################
+# 2. GESTIÓN DE USUARIOS (Solo Admin)
+###############################################################################
+
+### 2.1 Listar todos los usuarios
+GET {{baseUrl}}/admin/usuarios/
+
+### 2.2 Desactivar usuario (Baja lógica)
+POST {{baseUrl}}/admin/usuarios/2/desactivar
+
+### 2.3 Activar usuario
+POST {{baseUrl}}/admin/usuarios/2/activar
+
+
+###############################################################################
+# 3. GESTIÓN DE CATEGORÍAS (Lectura pública / Escritura Admin)
+###############################################################################
+
+### 3.1 Listar categorías activas
+GET {{baseUrl}}/categorias/
+
+### 3.2 Obtener detalle de categoría por ID
+GET {{baseUrl}}/categorias/1
+
+### 3.3 Crear nueva categoría (Admin)
+POST {{baseUrl}}/categorias/
+Content-Type: application/json
+
+{
+  "nombre": "Postres Especiales",
+  "descripcion": "Deliciosos postres artesanales de la casa"
+}
+
+### 3.4 Actualizar categoría (PUT - Admin)
+PUT {{baseUrl}}/categorias/1
+Content-Type: application/json
+
+{
+  "nombre": "Hamburguesas Gourmet",
+  "descripcion": "Hamburguesas 100% de carne vacuna seleccionada",
+  "activo": true
+}
+
+### 3.5 Desactivar categoría (DELETE baja lógica 204 - Admin)
+DELETE {{baseUrl}}/categorias/1
+
+
+###############################################################################
+# 4. GESTIÓN DE PRODUCTOS (Lectura pública / Escritura Admin)
+###############################################################################
+
+### 4.1 Listar productos activos (Paginado, búsqueda y filtros)
+GET {{baseUrl}}/productos/?skip=0&limit=20&search=hamburguesa&disponible=true
+
+### 4.2 Obtener producto por ID
+GET {{baseUrl}}/productos/1
+
+### 4.3 Crear producto (Admin)
+POST {{baseUrl}}/productos/
+Content-Type: application/json
+
+{
+  "nombre": "Hamburguesa Completa",
+  "descripcion": "Con queso, lechuga, tomate y papas fritas",
+  "precio_base": 12500.50,
+  "imagen_url": "https://example.com/hamburguesa.jpg",
+  "stock": 15,
+  "disponible": true,
+  "categoria_id": 1
+}
+
+### 4.4 Actualizar producto completo (PUT - Admin)
+PUT {{baseUrl}}/productos/1
+Content-Type: application/json
+
+{
+  "nombre": "Hamburguesa Doble Queso",
+  "descripcion": "Doble carne, doble Cheddar y papas",
+  "precio_base": 14000.00,
+  "imagen_url": "https://example.com/hamburguesa-doble.jpg",
+  "stock": 20,
+  "disponible": true,
+  "categoria_id": 1,
+  "activo": true
+}
+
+### 4.5 Actualizar stock y disponibilidad (PATCH - Admin)
+PATCH {{baseUrl}}/productos/1/stock
+Content-Type: application/json
+
+{
+  "stock": 50,
+  "disponible": true
+}
+
+### 4.6 Desactivar producto (DELETE baja lógica 204 - Admin)
+DELETE {{baseUrl}}/productos/1
+
+
+###############################################################################
+# 5. GESTIÓN DE PEDIDOS Y REGLAS DE NEGOCIO (RN-01 a RN-06)
+###############################################################################
+
+### 5.1 Crear Pedido (Transaccional RN-01 / Inmutabilidad RN-05 / Validación RN-06)
+POST {{baseUrl}}/pedidos/
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "producto_id": 1,
+      "cantidad": 2
+    }
+  ],
+  "forma_pago": "EFECTIVO",
+  "direccion_entrega": "Calle 3 y Avenida Bunge, Pinamar Centro",
+  "notas": "Sin cebolla por favor"
+}
+
+### 5.2 Listar Mis Pedidos (o Todos si es Admin)
+GET {{baseUrl}}/pedidos/?skip=0&limit=10
+
+### 5.3 Obtener Resumen del Negocio para el Panel de Admin
+GET {{baseUrl}}/pedidos/resumen
+
+### 5.4 Obtener Detalle de Pedido por ID
+GET {{baseUrl}}/pedidos/1
+
+### 5.5 Cambiar Estado del Pedido (PATCH - Máquina de estados RN-02 - Admin)
+PATCH {{baseUrl}}/pedidos/1/estado?nuevo_estado=EN_PREPARACION
+
+### 5.6 Cancelar Pedido propio en PENDIENTE (PATCH - Restituye stock RN-03)
+PATCH {{baseUrl}}/pedidos/1/cancelar
