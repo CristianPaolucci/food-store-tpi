@@ -41,13 +41,18 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.error('Error al cerrar sesión', error);
         } finally {
+          try {
+            localStorage.removeItem('foodstore_ultimos_pedidos_v2');
+          } catch {
+            // Ignorar errores de storage
+          }
           set({ usuario: null });
         }
       },
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ usuario: state.usuario }), // Solo guarda el usuario, nunca tokens ya que usamos cookies HttpOnly[cite: 8, 25]
+      partialize: (state) => ({ usuario: state.usuario }), // Solo guarda el usuario, nunca tokens ya que usamos cookies HttpOnly
     }
   )
 );
