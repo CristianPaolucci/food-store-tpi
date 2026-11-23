@@ -5,9 +5,17 @@ import { ProductoCard } from '../components/ProductoCard';
 import { Button } from '../../../shared/ui/Button';
 import type { Producto } from '../types/producto.types';
 
+type ProductoExtendido = Producto & {
+  producto_id?: number;
+  titulo?: string;
+  categoria?: { id?: number; nombre?: string } | string | null;
+  categoria_nombre?: string | null;
+  [key: string]: unknown;
+};
+
 export const CatalogoPage = () => {
   const queryClient = useQueryClient();
-  const [categoria, setCategoria] = useState('todos');
+  const [categoria, setCategoria] = useState<'todos' | 'comidas' | 'bebidas' | 'postres'>('todos');
   const [page, setPage] = useState(1);
   const limit = 16;
   const skip = (page - 1) * limit;
@@ -23,13 +31,19 @@ export const CatalogoPage = () => {
 
   const productosCrudos: Producto[] = data?.items || [];
 
-  const productosFiltrados = productosCrudos.filter((producto) => {
+  const productosFiltrados = productosCrudos.filter((item) => {
+    const producto = item as ProductoExtendido;
     if (categoria === 'todos') return true;
 
-    const prodExt = producto as Producto & { titulo?: string };
-    const nombre = (prodExt.nombre || prodExt.titulo || '').toLowerCase();
+    const categoriaTexto =
+      typeof producto.categoria === 'string'
+        ? producto.categoria
+        : producto.categoria?.nombre || producto.categoria_nombre || '';
+    const catLower = categoriaTexto.toLowerCase();
+    const nombre = (producto.nombre || producto.titulo || '').toLowerCase();
 
     const esBebida =
+      catLower.includes('bebida') ||
       nombre.includes('coca') ||
       nombre.includes('cerveza') ||
       nombre.includes('agua') ||
@@ -39,6 +53,7 @@ export const CatalogoPage = () => {
       nombre.includes('gaseosa');
 
     const esPostre =
+      catLower.includes('postre') ||
       nombre.includes('cheesecake') ||
       nombre.includes('volcán') ||
       nombre.includes('tiramisú') ||
@@ -158,14 +173,14 @@ export const CatalogoPage = () => {
       ) : (
         <>
           <div className="flex flex-wrap justify-center gap-6">
-            {productos.map((producto) => {
-              const prodExt = producto as Producto & { producto_id?: number };
+            {productos.map((item) => {
+              const producto = item as ProductoExtendido;
               return (
                 <div
-                  key={producto.id || prodExt.producto_id}
+                  key={producto.id || producto.producto_id}
                   className="w-full sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] max-w-sm"
                 >
-                  <ProductoCard producto={producto as never} />
+                  <ProductoCard producto={producto} />
                 </div>
               );
             })}

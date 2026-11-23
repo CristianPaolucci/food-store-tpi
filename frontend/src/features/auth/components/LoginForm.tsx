@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../../store/authStore';
 import { axiosInstance } from '../../../shared/api/axiosInstance';
+import { handleApiError } from '../../../shared/api/handleApiError';
 import { Button } from '../../../shared/ui/Button';
 import { Input } from '../../../shared/ui/Input';
 import { Card } from '../../../shared/ui/Card';
@@ -32,16 +33,13 @@ export const LoginForm = () => {
       formData.append('username', username.trim());
       formData.append('password', password);
 
-      // Petición al login del backend
       const response = await axiosInstance.post('/auth/login', formData, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       });
 
-      // El backend devuelve el usuario directamente en response.data.usuario
       const userData = response.data.usuario as UsuarioAuth | undefined;
 
       if (userData) {
-        // Guardamos el usuario en el store de Zustand de inmediato
         setUsuario(userData);
         setLoggedInUser(userData);
         setShowSuccessModal(true);
@@ -50,11 +48,7 @@ export const LoginForm = () => {
       }
     } catch (err: unknown) {
       console.error('Error de login:', err);
-      const errorObj = err as { response?: { data?: { detail?: string } }; message?: string };
-      const mensajeError =
-        errorObj.response?.data?.detail ||
-        errorObj.message ||
-        'Error al iniciar sesión. Verificá tus credenciales.';
+      const mensajeError = handleApiError(err);
       setError(mensajeError);
       setShowErrorModal(true);
     } finally {
@@ -134,6 +128,7 @@ export const LoginForm = () => {
             </div>
             <div className="pt-2">
               <button
+                type="button"
                 onClick={handleContinueAfterLogin}
                 className="w-full bg-indigo-600 text-white py-2.5 px-4 rounded-xl hover:bg-indigo-700 transition-colors text-sm font-medium shadow-md shadow-indigo-200"
               >
@@ -161,6 +156,7 @@ export const LoginForm = () => {
             </div>
             <div className="pt-2">
               <button
+                type="button"
                 onClick={() => setShowErrorModal(false)}
                 className="w-full bg-red-600 text-white py-2.5 px-4 rounded-xl hover:bg-red-700 transition-colors text-sm font-medium shadow-md shadow-red-200"
               >
