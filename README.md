@@ -5,7 +5,8 @@ Aplicación web full-stack de e-commerce gastronómico y gestión de pedidos des
 ## Enlaces del proyecto
 
 - **Repositorio público en GitHub:** https://github.com/CristianPaolucci/food-store-tpi
-- **Video de demostración (10–15 minutos):** [PENDIENTE — PEGAR AQUÍ EL ENLACE PÚBLICO DEL VIDEO]
+- **Video de demostración https://drive.google.com/file/d/1hJbOBBRhc8hQDLTf86bSlKL5QFdTrXvx/view?usp=sharing
+
 
 ## Características principales
 
