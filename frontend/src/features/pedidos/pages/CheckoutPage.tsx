@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useForm } from '@tanstack/react-form';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCartStore } from '../../../store/cartStore';
 import {
   guardarPedidoRespaldoLocal,
@@ -22,6 +23,7 @@ interface ResumenConfirmacion {
 
 export const CheckoutPage = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { items, vaciar, total } = useCartStore();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -117,6 +119,8 @@ export const CheckoutPage = () => {
 
         guardarPedidoRespaldoLocal(respaldoCompleto);
         vaciar();
+        await queryClient.invalidateQueries({ queryKey: ['pedidos'] });
+        await queryClient.invalidateQueries({ queryKey: ['productos'] });
 
         setResumenConfirmacion({
           pedido: respaldoCompleto,
