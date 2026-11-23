@@ -35,7 +35,7 @@ class ProductoService:
                 activo=True,
             )
             prod_uow.productos.add(db_producto)
-            prod_uow.session.commit()
+            prod_uow.session.flush()
             prod_uow.session.refresh(db_producto)
             prod_uow.session.expunge(db_producto)
             return db_producto
@@ -91,7 +91,7 @@ class ProductoService:
                 setattr(producto, key, value)
 
             prod_uow.session.add(producto)
-            prod_uow.session.commit()
+            prod_uow.session.flush()
             prod_uow.session.refresh(producto)
             prod_uow.session.expunge(producto)
             return producto
@@ -106,7 +106,7 @@ class ProductoService:
                 )
             producto.activo = False
             prod_uow.session.add(producto)
-            prod_uow.session.commit()
+            prod_uow.session.flush()
             prod_uow.session.refresh(producto)
             prod_uow.session.expunge(producto)
             return producto
