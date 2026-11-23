@@ -1,9 +1,11 @@
-from sqlmodel import Session
 from typing import Callable
+from sqlmodel import Session
+from app.core.database import session_factory
+
 
 class PedidoUnitOfWork:
-    def __init__(self, session_factory: Callable[[], Session]):
-        self.session_factory = session_factory
+    def __init__(self, session_factory_func: Callable[[], Session] = session_factory):
+        self.session_factory = session_factory_func
         self.session: Session | None = None
 
     def __enter__(self):
