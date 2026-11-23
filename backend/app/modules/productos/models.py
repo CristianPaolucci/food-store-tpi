@@ -1,6 +1,9 @@
 from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional
+from typing import Optional, List, TYPE_CHECKING
 from app.modules.categorias.models import Categoria
+
+if TYPE_CHECKING:
+    from app.modules.pedidos.models import DetallePedido
 
 class Producto(SQLModel, table=True):
     __tablename__ = "productos"
@@ -19,3 +22,4 @@ class Producto(SQLModel, table=True):
         back_populates="productos",
         sa_relationship_kwargs={"lazy": "selectin"}
     )
+    detalles: List["DetallePedido"] = Relationship(back_populates="producto")
