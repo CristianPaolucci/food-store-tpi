@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends, Response, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import select
-from sqlalchemy import text
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel, EmailStr
 from app.core.database import session_factory
 from app.core.security import create_access_token, decode_access_token, get_password_hash
@@ -24,42 +23,40 @@ class UsuarioRegister(BaseModel):
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register_user(user_in: UsuarioRegister):
-    with session_factory() as db:
-        # Validar si el usuario o email ya existen
-        existing_user = db.exec(select(Usuario).where((Usuario.username == user_in.username) | (Usuario.email == user_in.email))).first()
+    uow = UsuarioUnitOfWork()
+    with uow as tx:
+        existing_user = tx.session.exec(
+            select(Usuario).where((Usuario.username == user_in.username) | (Usuario.email == user_in.email))
+        ).first()
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="El nombre de usuario o correo electrónico ya se encuentran registrados."
             )
-        
+
         hashed_pwd = get_password_hash(user_in.password)
-        now_str = datetime.utcnow().isoformat()
-        
-        # Inserción directa incluyendo created_at para satisfacer la restricción NOT NULL
-        stmt = text("""
-            INSERT INTO usuarios (username, full_name, email, hashed_password, role, disabled, created_at)
-            VALUES (:username, :full_name, :email, :hashed_password, :role, :disabled, :created_at)
-        """)
-        db.execute(stmt, {
+        nuevo_usuario = Usuario(
+            username=user_in.username,
+            email=user_in.email,
+            hashed_password=hashed_pwd,
+            role="user",
+            disabled=False,
+            created_at=datetime.now(timezone.utc),
+        )
+        if hasattr(nuevo_usuario, "full_name"):
+            setattr(nuevo_usuario, "full_name", user_in.full_name)
+
+        tx.usuarios.add(nuevo_usuario)
+        tx.session.flush()
+
+    return {
+        "message": "Usuario registrado exitosamente",
+        "usuario": {
             "username": user_in.username,
-            "full_name": user_in.full_name,
             "email": user_in.email,
-            "hashed_password": hashed_pwd,
-            "role": "user",
-            "disabled": 0,
-            "created_at": now_str
-        })
-        db.commit()
-        
-        return {
-            "message": "Usuario registrado exitosamente",
-            "usuario": {
-                "username": user_in.username,
-                "email": user_in.email,
-                "role": "user"
-            }
+            "role": "user"
         }
+    }
 
 @router.post("/login")
 def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends(), auth_service: AuthService = Depends(get_auth_service)):
