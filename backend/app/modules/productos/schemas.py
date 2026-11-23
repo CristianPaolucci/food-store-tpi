@@ -34,7 +34,7 @@ class ProductoRead(BaseModel):
     disponible: bool
     activo: bool
     categoria_id: int
-    categoria: CategoriaRead
+    categoria: CategoriaRead | None = None
 
     class Config:
         from_attributes = True

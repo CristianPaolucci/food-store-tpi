@@ -56,6 +56,7 @@ class PedidoRead(BaseModel):
     direccion_entrega: str
     notas: str | None = None
     created_at: datetime
+    updated_at: datetime | None = None
     items: list[DetallePedidoRead] = []
 
     class Config:
