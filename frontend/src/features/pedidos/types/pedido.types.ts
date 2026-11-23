@@ -24,6 +24,7 @@ export interface DetallePedidoRead {
 export interface PedidoRead {
   id: number;
   usuario_id: number;
+  usuario_username?: string;
   estado: EstadoPedido;
   forma_pago: FormaPago;
   direccion_entrega: string;
