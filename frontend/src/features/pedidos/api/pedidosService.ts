@@ -77,6 +77,18 @@ const normalizarPedido = (
   const usuarioIdDetectado =
     leerNumeroSeguro(src, ['usuario_id', 'usuarioId', 'user_id']) ?? respaldo?.usuario_id ?? 0;
 
+  const usuarioObj =
+    src.usuario && typeof src.usuario === 'object'
+      ? (src.usuario as AnyRecord)
+      : baseObj.usuario && typeof baseObj.usuario === 'object'
+      ? (baseObj.usuario as AnyRecord)
+      : undefined;
+
+  const usuarioUsernameDetectado =
+    leerTextoSeguro(src, ['usuario_username', 'username', 'usuario_nombre']) ??
+    (usuarioObj ? leerTextoSeguro(usuarioObj, ['username', 'nombre']) : undefined) ??
+    respaldo?.usuario_username;
+
   const rawDetallesCandidatos =
     src.detalles ??
     src.items ??
@@ -185,6 +197,7 @@ const normalizarPedido = (
   return {
     id: idDetectado,
     usuario_id: usuarioIdDetectado,
+    usuario_username: usuarioUsernameDetectado,
     estado: estadoDetectado,
     forma_pago: formaPagoDetectada,
     direccion_entrega: direccionDetectada,
@@ -239,9 +252,10 @@ export const pedidosService = {
     const locales = obtenerPedidosRespaldoLocal();
     const usados = new Set<number>();
 
-    const items = listaRaw.map((rawItem, idx) => {
+    const items = listaRaw.map((rawItem) => {
       const candidate = rawItem as AnyRecord;
       const rawId = leerNumeroSeguro(candidate, ['id', 'pedido_id', 'pedidoId']);
+      const rawUsuarioId = leerNumeroSeguro(candidate, ['usuario_id', 'usuarioId', 'user_id']);
       const dirApi = leerTextoSeguro(candidate, [
         'direccion_entrega',
         'direccionEntrega',
@@ -252,15 +266,13 @@ export const pedidosService = {
       if (rawId !== undefined && rawId > 0) {
         matchIndex = locales.findIndex((l, i) => !usados.has(i) && l.id === rawId);
       }
-      if (matchIndex === -1 && dirApi) {
+      if (matchIndex === -1 && dirApi && rawUsuarioId !== undefined && rawUsuarioId > 0) {
         matchIndex = locales.findIndex(
           (l, i) =>
             !usados.has(i) &&
+            l.usuario_id === rawUsuarioId &&
             l.direccion_entrega.toLowerCase() === dirApi.toLowerCase()
         );
-      }
-      if (matchIndex === -1 && locales[idx] && !usados.has(idx)) {
-        matchIndex = idx;
       }
 
       const matchLocal = matchIndex >= 0 ? locales[matchIndex] : undefined;
