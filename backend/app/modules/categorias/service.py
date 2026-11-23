@@ -3,6 +3,7 @@ from app.modules.categorias.models import Categoria
 from app.modules.categorias.schemas import CategoriaCreate, CategoriaUpdate
 from app.modules.categorias.unit_of_work import CategoriaUnitOfWork
 
+
 class CategoriaService:
     def __init__(self, uow: CategoriaUnitOfWork):
         self.uow = uow
@@ -20,9 +21,9 @@ class CategoriaService:
                 activo=True
             )
             uow.categorias.add(db_categoria)
-            uow.session.commit()
+            uow.session.flush()
             uow.session.refresh(db_categoria)
-            
+
             # Evita el DetachedInstanceError al serializar la respuesta en FastAPI
             uow.session.expunge(db_categoria)
             return db_categoria
@@ -34,7 +35,7 @@ class CategoriaService:
                 resultado = [c for c in categorias if c.activo]
             else:
                 resultado = categorias
-            
+
             for cat in resultado:
                 uow.session.expunge(cat)
             return resultado
@@ -47,7 +48,7 @@ class CategoriaService:
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Categoría no encontrada"
                 )
-            
+
             uow.session.expunge(categoria)
             return categoria
 
@@ -59,8 +60,8 @@ class CategoriaService:
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Categoría no encontrada"
                 )
-            
-            update_data = categoria_in.dict(exclude_unset=True)
+
+            update_data = categoria_in.model_dump(exclude_unset=True)
             if "nombre" in update_data and update_data["nombre"] != categoria.nombre:
                 existing = uow.categorias.get_by_nombre(update_data["nombre"])
                 if existing:
@@ -68,14 +69,14 @@ class CategoriaService:
                         status_code=status.HTTP_409_CONFLICT,
                         detail="Ya existe otra categoría con ese nombre"
                     )
-            
+
             for key, value in update_data.items():
                 setattr(categoria, key, value)
-            
+
             uow.session.add(categoria)
-            uow.session.commit()
+            uow.session.flush()
             uow.session.refresh(categoria)
-            
+
             uow.session.expunge(categoria)
             return categoria
 
@@ -89,8 +90,8 @@ class CategoriaService:
                 )
             categoria.activo = False
             uow.session.add(categoria)
-            uow.session.commit()
+            uow.session.flush()
             uow.session.refresh(categoria)
-            
+
             uow.session.expunge(categoria)
             return categoria
