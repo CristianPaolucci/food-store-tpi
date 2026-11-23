@@ -33,7 +33,7 @@ class UsuarioService:
                 disabled=False,
             )
             uow.usuarios.add(db_user)
-            uow.session.commit()
+            uow.session.flush()
             uow.session.refresh(db_user)
 
             # Evita el DetachedInstanceError al serializar la respuesta en FastAPI
@@ -65,7 +65,7 @@ class UsuarioService:
 
             user.disabled = disabled
             uow.session.add(user)
-            uow.session.commit()
+            uow.session.flush()
             uow.session.refresh(user)
 
             uow.session.expunge(user)
