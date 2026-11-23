@@ -13,15 +13,15 @@ export interface ResumenPedidos {
 export interface UsuarioAdmin {
   id: number;
   username: string;
-  full_name: string;
+  full_name?: string | null;
   email: string;
   role: string;
   disabled: boolean;
-  created_at: string;
+  created_at?: string | null;
 }
 
 export const adminService = {
-  // Obtener el resumen del negocio (Ruta oficial del TPI: /pedidos/resumen)[cite: 26]
+  // Obtener el resumen del negocio (Ruta oficial del TPI: /pedidos/resumen)
   getResumen: async (): Promise<ResumenPedidos> => {
     const response = await axiosInstance.get<ResumenPedidos>('/pedidos/resumen');
     return response.data;
