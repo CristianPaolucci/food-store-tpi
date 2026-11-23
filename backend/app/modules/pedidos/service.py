@@ -6,6 +6,13 @@ from app.modules.pedidos.schemas import PedidoCreate, PedidoRead
 from app.modules.productos.models import Producto
 from app.modules.pedidos.unit_of_work import PedidoUnitOfWork
 
+TRANSICIONES_PEDIDO_VALIDAS: dict[str, set[str]] = {
+    "PENDIENTE": {"EN_PREPARACION", "CANCELADO"},
+    "EN_PREPARACION": {"ENTREGADO", "CANCELADO"},
+    "ENTREGADO": set(),
+    "CANCELADO": set(),
+}
+
 
 class PedidoService:
     def __init__(self, uow: PedidoUnitOfWork):
@@ -96,8 +103,16 @@ class PedidoService:
                 )
 
             estado_destino = nuevo_estado.upper()
+            estado_actual = (pedido.estado or "").upper()
+            permitidos = TRANSICIONES_PEDIDO_VALIDAS.get(estado_actual, set())
 
-            if estado_destino == "CANCELADO" and pedido.estado != "CANCELADO":
+            if estado_destino != estado_actual and estado_destino not in permitidos:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Transición de estado inválida de {estado_actual} a {estado_destino}",
+                )
+
+            if estado_destino == "CANCELADO" and estado_actual != "CANCELADO":
                 for detalle in pedido.items:
                     if detalle.producto_id:
                         producto = uow.session.get(Producto, detalle.producto_id)
