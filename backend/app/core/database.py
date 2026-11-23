@@ -19,15 +19,24 @@ def create_all_tables() -> None:
 
     SQLModel.metadata.create_all(engine)
 
-    # ⚠️ Verificación y parche automático para SQLite: añade columnas faltantes (como created_at) sin perder datos
+    # ⚠️ Verificación y parche automático para SQLite: añade columnas faltantes sin perder datos
     if settings.DATABASE_URL.startswith("sqlite"):
         with engine.begin() as conn:
             try:
                 result = conn.execute(text("PRAGMA table_info(pedidos);"))
                 columns = [row[1] for row in result.fetchall()]
-                
                 if columns and "created_at" not in columns:
                     conn.execute(text("ALTER TABLE pedidos ADD COLUMN created_at DATETIME;"))
+                if columns and "updated_at" not in columns:
+                    conn.execute(text("ALTER TABLE pedidos ADD COLUMN updated_at DATETIME;"))
+            except Exception:
+                pass
+
+            try:
+                user_cols_res = conn.execute(text("PRAGMA table_info(usuarios);"))
+                user_cols = [row[1] for row in user_cols_res.fetchall()]
+                if user_cols and "created_at" not in user_cols:
+                    conn.execute(text("ALTER TABLE usuarios ADD COLUMN created_at DATETIME;"))
             except Exception:
                 pass
 
