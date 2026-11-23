@@ -25,6 +25,7 @@ type PedidoExtendido = PedidoRespaldoLocal & {
   numero_visible?: number;
   clave_unica?: string;
   detalles?: DetalleExtendido[];
+  usuario?: { id?: number; username?: string };
 };
 
 interface AvisoModalState {
@@ -283,6 +284,8 @@ export const MisPedidosPage = () => {
             const numeroVisible = idReal ?? idx + 1;
             const claveUnica = `${idReal ?? 'local'}-${idx}`;
             const edicion = edicionesLocales[claveUnica] ?? edicionesLocales[String(numeroVisible)];
+            const usernameResuelto =
+              pedidoBase.usuario?.username || pedidoBase.usuario_username || '-';
 
             const pedido: PedidoExtendido = {
               ...pedidoBase,
@@ -290,7 +293,7 @@ export const MisPedidosPage = () => {
               numero_visible: numeroVisible,
               clave_unica: claveUnica,
               id: numeroVisible,
-              usuario_username: pedidoBase.usuario_username,
+              usuario_username: usernameResuelto,
               direccion_entrega: edicion?.direccion_entrega ?? pedidoBase.direccion_entrega,
               notas: edicion?.notas !== undefined ? edicion.notas : pedidoBase.notas,
               estado: edicion?.estado ?? pedidoBase.estado,
@@ -340,9 +343,7 @@ export const MisPedidosPage = () => {
                     </span>
                     <p className="text-xs text-gray-600">
                       👤 Usuario:{' '}
-                      <strong className="text-gray-800">
-                        {pedido.usuario_username || '-'}
-                      </strong>{' '}
+                      <strong className="text-gray-800">{usernameResuelto}</strong>{' '}
                       <span className="text-gray-500">(ID: {pedido.usuario_id || '-'})</span>
                     </p>
                     <p className="text-sm text-gray-600 pt-0.5">
