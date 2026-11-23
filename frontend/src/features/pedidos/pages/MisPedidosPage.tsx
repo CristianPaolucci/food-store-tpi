@@ -8,6 +8,7 @@ import {
 } from '../api/pedidosService';
 import { Button } from '../../../shared/ui/Button';
 import { handleApiError } from '../../../shared/api/handleApiError';
+import { useAuthStore } from '../../../store/authStore';
 import { useState, useEffect } from 'react';
 
 interface DetalleExtendido {
@@ -84,6 +85,7 @@ const formatearMensajeErrorCancelacion = (mensajeOriginal: string): string => {
 export const MisPedidosPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const usuario = useAuthStore((state) => state.usuario);
   const [avisoModal, setAvisoModal] = useState<AvisoModalState | null>(null);
   const [pedidoACancelar, setPedidoACancelar] = useState<PedidoExtendido | null>(null);
   const [pedidoAEditar, setPedidoAEditar] = useState<PedidoExtendido | null>(null);
@@ -102,7 +104,7 @@ export const MisPedidosPage = () => {
   }, [pedidoAEditar]);
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['pedidos', 'mis-pedidos'],
+    queryKey: ['pedidos', 'mis-pedidos', usuario?.id ?? 'anon'],
     queryFn: () => pedidosService.getMisPedidos(),
     retry: 1,
   });
@@ -215,7 +217,9 @@ export const MisPedidosPage = () => {
     : [];
 
   const pedidosRespaldo: PedidoExtendido[] = isError
-    ? (obtenerPedidosRespaldoLocal() as PedidoExtendido[])
+    ? (obtenerPedidosRespaldoLocal() as PedidoExtendido[]).filter(
+        (p) => !usuario?.id || p.usuario_id === usuario.id
+      )
     : [];
 
   const pedidosCrudos: PedidoExtendido[] =
@@ -286,6 +290,7 @@ export const MisPedidosPage = () => {
               numero_visible: numeroVisible,
               clave_unica: claveUnica,
               id: numeroVisible,
+              usuario_username: pedidoBase.usuario_username,
               direccion_entrega: edicion?.direccion_entrega ?? pedidoBase.direccion_entrega,
               notas: edicion?.notas !== undefined ? edicion.notas : pedidoBase.notas,
               estado: edicion?.estado ?? pedidoBase.estado,
@@ -333,6 +338,13 @@ export const MisPedidosPage = () => {
                       <span>🧾</span>
                       <span>Pedido #{numeroVisible}</span>
                     </span>
+                    <p className="text-xs text-gray-600">
+                      👤 Usuario:{' '}
+                      <strong className="text-gray-800">
+                        {pedido.usuario_username || '-'}
+                      </strong>{' '}
+                      <span className="text-gray-500">(ID: {pedido.usuario_id || '-'})</span>
+                    </p>
                     <p className="text-sm text-gray-600 pt-0.5">
                       🕒 Hecho el: <strong className="text-gray-800">{fechaHoraTexto}</strong>
                     </p>
