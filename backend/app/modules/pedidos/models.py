@@ -20,6 +20,10 @@ class Pedido(SQLModel, table=True):
         default_factory=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
 
     usuario: Optional[Usuario] = Relationship(back_populates="pedidos")
     items: List["DetallePedido"] = Relationship(
@@ -40,4 +44,4 @@ class DetallePedido(SQLModel, table=True):
     subtotal: float = Field(nullable=False)
 
     pedido: Optional[Pedido] = Relationship(back_populates="items")
-    producto: Optional[Producto] = Relationship()
+    producto: Optional[Producto] = Relationship(back_populates="detalles")
