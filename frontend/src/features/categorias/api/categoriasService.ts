@@ -3,7 +3,7 @@ import { axiosInstance } from '../../../shared/api/axiosInstance';
 export interface CategoriaRead {
   id: number;
   nombre: string;
-  descripcion: string;
+  descripcion?: string | null;
   activo: boolean;
 }
 
